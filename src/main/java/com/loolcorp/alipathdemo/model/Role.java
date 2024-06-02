@@ -15,7 +15,7 @@ import lombok.Setter;
  * @Created 01/06/2024 - 11:25 PM
  * @project alipathdemo
  */
-@Document(collation = "roles")
+@Document(collection = "roles")
 @NoArgsConstructor
 @Setter
 @Getter
