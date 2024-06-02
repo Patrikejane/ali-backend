@@ -1,6 +1,12 @@
 package com.loolcorp.alipathdemo.controller;
 
+import com.loolcorp.alipathdemo.enums.ERole;
+import com.loolcorp.alipathdemo.model.Role;
+import com.loolcorp.alipathdemo.model.User;
 import com.loolcorp.alipathdemo.payload.LoginRequest;
+import com.loolcorp.alipathdemo.payload.SignupRequest;
+import com.loolcorp.alipathdemo.payload.response.JwtResponse;
+import com.loolcorp.alipathdemo.payload.response.ResponseMessage;
 import com.loolcorp.alipathdemo.repository.RoleRepository;
 import com.loolcorp.alipathdemo.repository.UserRepository;
 import com.loolcorp.alipathdemo.security.JwtUtils;
@@ -13,10 +19,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -24,6 +31,9 @@ import java.util.stream.Collectors;
  * @Created 02/06/2024 - 2:55 AM
  * @project alipathdemo
  */
+@CrossOrigin (origins = "*", maxAge = 3600)
+@RestController
+@RequestMapping ("/api/auth")
 public class AuthController {
 
 
@@ -56,7 +66,7 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .collect( Collectors.toList());
 
-        return ResponseEntity.ok(new JwtResponse(jwt,
+        return ResponseEntity.ok(new JwtResponse (jwt,
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getEmail(),
@@ -68,13 +78,13 @@ public class AuthController {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+                    .body(new ResponseMessage ("Error: Username is already taken!"));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             return ResponseEntity
                     .badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+                    .body(new ResponseMessage("Error: Email is already in use!"));
         }
 
         // Create new user's account
@@ -82,11 +92,11 @@ public class AuthController {
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
-        Set<String> strRoles = signUpRequest.getRoles();
-        Set<Role> roles = new HashSet<>();
+        Set <String> strRoles = signUpRequest.getRoles();
+        Set<Role> roles = new HashSet <> ();
 
         if (strRoles == null) {
-            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+            Role userRole = roleRepository.findByName( ERole.ROLE_USER)
                     .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
             roles.add(userRole);
         } else {
@@ -115,6 +125,6 @@ public class AuthController {
         user.setRoles(roles);
         userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        return ResponseEntity.ok(new ResponseMessage("User registered successfully!"));
     }
 }
