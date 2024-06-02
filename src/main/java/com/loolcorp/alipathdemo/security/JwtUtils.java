@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 import static io.jsonwebtoken.Jwts.*;
@@ -25,10 +25,10 @@ public class JwtUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
 
-    @Value ("${bezkoder.app.jwtSecret}")
+    @Value ("${loolab.app.jwtSecret}")
     private String jwtSecret;
 
-    @Value("${bezkoder.app.jwtExpirationMs}")
+    @Value("${loolab.app.jwtExpirationMs}")
     private int jwtExpirationMs;
 
     public String generateJwtToken( Authentication authentication) {
@@ -43,18 +43,18 @@ public class JwtUtils {
                 .compact();
     }
 
-    private Key key() {
+    private SecretKey key() {
         return Keys.hmacShaKeyFor( Decoders.BASE64.decode(jwtSecret));
     }
 
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parser().setSigningKey(key()).build()
-                .parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parser().verifyWith (key()).build()
+                .parseSignedClaims (token).getPayload ().getSubject();
     }
 
     public boolean validateJwtToken(String authToken) {
         try {
-            Jwts.parser().setSigningKey(key()).build().parse(authToken);
+            Jwts.parser().decryptWith(key()).build().parse(authToken);
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
