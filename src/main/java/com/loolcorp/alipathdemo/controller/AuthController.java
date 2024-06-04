@@ -7,12 +7,15 @@ import com.loolcorp.alipathdemo.payload.LoginRequest;
 import com.loolcorp.alipathdemo.payload.SignupRequest;
 import com.loolcorp.alipathdemo.payload.response.JwtResponse;
 import com.loolcorp.alipathdemo.payload.response.ResponseMessage;
+import com.loolcorp.alipathdemo.payload.response.UserInfoResponse;
 import com.loolcorp.alipathdemo.repository.RoleRepository;
 import com.loolcorp.alipathdemo.repository.UserRepository;
 import com.loolcorp.alipathdemo.security.JwtUtils;
 import com.loolcorp.alipathdemo.security.UserDetailsImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -55,22 +58,24 @@ public class AuthController {
     @PostMapping ("/signin")
     public ResponseEntity <?> authenticateUser( @Valid @RequestBody LoginRequest loginRequest) {
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken (loginRequest.getUsername(), loginRequest.getPassword()));
+        Authentication authentication = authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        List <String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect( Collectors.toList());
 
-        return ResponseEntity.ok(new JwtResponse (jwt,
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getEmail(),
-                roles));
+        ResponseCookie jwtCookie = jwtUtils.generateJwtCookie(userDetails);
+
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok().header( HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .body(new UserInfoResponse (userDetails.getId(),
+                        userDetails.getUsername(),
+                        userDetails.getEmail(),
+                        roles));
     }
 
     @PostMapping("/signup")

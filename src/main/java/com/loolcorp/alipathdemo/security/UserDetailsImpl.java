@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
  * @Created 02/06/2024 - 12:46 AM
  * @project alipathdemo
  */
-@Service
+
 public class UserDetailsImpl implements UserDetails {
     private static final long serialVersionUID = 1L;
 
-    private String id;
+    private Long id;
 
     private String username;
 
@@ -32,7 +32,7 @@ public class UserDetailsImpl implements UserDetails {
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserDetailsImpl(String id, String username, String email, String password,
+    public UserDetailsImpl(Long id, String username, String email, String password,
                            Collection <? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
@@ -59,7 +59,7 @@ public class UserDetailsImpl implements UserDetails {
         return authorities;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
